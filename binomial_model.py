@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import random
 import numpy as np
-from numpy.f2py.auxfuncs import throw_error
 
 u = 2
 d = 1 / u
@@ -57,7 +56,7 @@ def run_simulation(number_of_steps):
 
         return [y, z, p]
     else:
-        throw_error("Arbitrage in the model!")
+        print("Arbitrage in the model!")
         return []
 
 
