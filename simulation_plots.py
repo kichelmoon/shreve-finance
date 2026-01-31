@@ -7,7 +7,7 @@ def plot_simulation(simulation, steps, delta_0, interest):
     plt.plot(x, simulation[1])
     plt.plot(x, simulation[2])
 
-    plt.legend(["Stocks", "Cash", "Portfolio with " + str(delta_0) + " parts Cash"])
+    plt.legend(["Stocks", "Cash", "Portfolio with " + str(delta_0) + " parts Stocks"])
     plt.title("Binomial model with " + str(interest) + " interest")
     plt.xlabel("Steps")
     plt.ylabel("Price")

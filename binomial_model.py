@@ -20,7 +20,6 @@ class ModelParameters:
     def check_no_arbitrage(self):
         return 0 < self.d < 1 + self.r < self.u
 
-
     def __init__(self, up_factor, interest):
         self.u = up_factor
         self.d = 1/self.u
@@ -40,7 +39,6 @@ class Simulation:
         if model_parameters.check_no_arbitrage():
             self.parameters = model_parameters
             self.number_of_steps = steps
-            self.flips = flip_coins(self.number_of_steps)
             self.s_0 = initial_stock_price
             self.stock_simulation = []
             self.stock_simulation.append(self.s_0)
@@ -51,20 +49,21 @@ class Simulation:
             print("Arbitrage in the model!")
 
     def generate_new(self):
+        self.flips = flip_coins(self.number_of_steps)
+
         for i in range(0, self.number_of_steps - 1):
             if self.flips[i] == 0:
-                self.stock_simulation.append(self.stock_simulation[-1] * self.parameters.d)
+                self.stock_simulation.append(self.stock_simulation[-1] * self.parameters.u)
             elif self.flips[i] == 1:
                 self.stock_simulation.append(self.stock_simulation[-1] * self.parameters.d)
 
             self.cash_simulation.append(self.cash_simulation[-1] * (1+self.parameters.r))
 
-    def get_portfolio_simulation(self, cash_ratio):
-        if 0 < cash_ratio < 1:
+    def get_portfolio_simulation(self, stock_ratio):
+        if 0 < stock_ratio < 1:
             portfolio = []
             for i in range(0, self.number_of_steps):
-                portfolio.append(cash_ratio*self.cash_simulation[i] + (1-cash_ratio)*self.stock_simulation[i])
-                print(str(i) + " - "  + str(portfolio))
+                portfolio.append(stock_ratio * self.stock_simulation[i] + (1 - stock_ratio) * self.cash_simulation[i])
             return portfolio
         else:
             return [0] * self.number_of_steps
