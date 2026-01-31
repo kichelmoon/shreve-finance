@@ -1,10 +1,4 @@
-import matplotlib.pyplot as plt
 import random
-import numpy as np
-
-u = 2
-d = 1 / u
-r = 0.02
 
 def flip_coins(times):
     flips = []
@@ -15,47 +9,62 @@ def flip_coins(times):
     return flips
 
 
-def run_simulation(number_of_steps):
-    if 0 < d < 1+r < u:
-        flips = flip_coins(number_of_steps)
+class ModelParameters:
+    u: float
+    d: float
+    r: float
 
-        states: list[list[float]] = [[S_0], [X_0], [X_0]]
-        for i in range(0, number_of_steps):
-            if flips[i] == 0:
-                states[0].append(states[0][-1] * d)
-            elif flips[i] == 1:
-                states[0].append(states[0][-1] * u)
+    p_tilde: float
+    q_tilde: float
 
-            states[1].append(states[1][-1] * (1+r))
-
-            states[2].append(delta_0 * states[0][-1] + (1 - delta_0) * states[1][-1])
-
-        return states
-    else:
-        print("Arbitrage in the model!")
-        return []
+    def check_no_arbitrage(self):
+        return 0 < self.d < 1 + self.r < self.u
 
 
-def plot_simulation(simulation, steps):
-    x = np.arange(0, steps + 1, 1)
-    plt.plot(x, simulation[0])
-    plt.plot(x, simulation[1])
-    plt.plot(x, simulation[2])
+    def __init__(self, up_factor, interest):
+        self.u = up_factor
+        self.d = 1/self.u
+        self.r = interest
+        self.p_tilde = (1 + self.r - self.d) / (self.u - self.d)
+        self.q_tilde = (1 - self.p_tilde)
 
-    plt.legend(["Stocks", "Cash", "Portfolio with " + str(delta_0) + " parts Cash"])
-    plt.title("Binomial model with " + str(r) + " interest")
-    plt.xlabel("Steps")
-    plt.ylabel("Price")
-    plt.show()
-    plt.show()
+class Simulation:
+    parameters: ModelParameters
+    number_of_steps: int
+    flips: list[int]
+    s_0: float
+    stock_simulation: list[float]
+    cash_simulation: list[float]
 
-    plt.show()
+    def __init__(self, model_parameters, steps, initial_stock_price):
+        if model_parameters.check_no_arbitrage():
+            self.parameters = model_parameters
+            self.number_of_steps = steps
+            self.flips = flip_coins(self.number_of_steps)
+            self.s_0 = initial_stock_price
+            self.stock_simulation = []
+            self.stock_simulation.append(self.s_0)
+            self.cash_simulation = []
+            self.cash_simulation.append(1)
+            self.generate_new()
+        else:
+            print("Arbitrage in the model!")
 
+    def generate_new(self):
+        for i in range(0, self.number_of_steps - 1):
+            if self.flips[i] == 0:
+                self.stock_simulation.append(self.stock_simulation[-1] * self.parameters.d)
+            elif self.flips[i] == 1:
+                self.stock_simulation.append(self.stock_simulation[-1] * self.parameters.d)
 
-n = 10
-S_0 = 1
-X_0 = 1
-delta_0 = 0.3
+            self.cash_simulation.append(self.cash_simulation[-1] * (1+self.parameters.r))
 
-simulation_results = run_simulation(n)
-plot_simulation(simulation_results, n)
+    def get_portfolio_simulation(self, cash_ratio):
+        if 0 < cash_ratio < 1:
+            portfolio = []
+            for i in range(0, self.number_of_steps):
+                portfolio.append(cash_ratio*self.cash_simulation[i] + (1-cash_ratio)*self.stock_simulation[i])
+                print(str(i) + " - "  + str(portfolio))
+            return portfolio
+        else:
+            return [0] * self.number_of_steps
